@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>元元工作助手</title>
+    <!-- 必须先引入vue，  后使用element-ui -->
+    <script src="https://cdn.staticfile.org/vue/2.7.0/vue.min.js"></script>
+    <!--引入 element-ui 的样式，-->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入element 的组件库-->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jszip/3.5.0/jszip.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script lang="javascript" src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <el-radio-group v-model="type">
+            <el-radio-button label="0">日报</el-radio-button>
+            <el-radio-button label="1">数据</el-radio-button>
+        </el-radio-group>
+        <div style="width: 100%;height:1px;background-color: gray;margin:1rem 0"></div>
+        <el-row v-show="type==='0'">
+            <el-row>
+                <el-date-picker v-model="chooseDate" type="date" placeholder="选择日期" @change="clickDateEveryDay">
+                </el-date-picker>
+            </el-row>
+            <div style="width: 100%;height:1px;margin: 10px 0;"></div>
+            <el-row style="background-color: rgb(243, 209, 209);">
+                <el-col :span="3"><el-link :href="linkDay.rblink1" target="_blank"
+                        v-show="linkDay.rblink1">第一步</el-link></el-col>
+                <el-col :span="3"><el-link :href="linkDay.rblink2" target="_blank"
+                        v-show="linkDay.rblink2">第二步</el-link></el-col>
+                <el-col :span="3"><el-link :href="linkDay.rblink3" target="_blank"
+                        v-show="linkDay.rblink3">第三步</el-link></el-col>
+            </el-row>
+            <el-row>
+                <el-col :span="6"><el-button @click="rivbaoOutput">输出</el-button></el-col>
+            </el-row>
+            <el-row style="margin-top: 10px;">
+                <el-col :span="24"><el-input v-model="ribaoMessage1" placeholder="请输入第一步"></el-input></el-col>
+            </el-row>
+            <el-row style="margin-top: 10px;">
+                <el-col :span="24"><el-input v-model="ribaoMessage2" placeholder="请输入第二步"></el-input></el-col>
+            </el-row>
+            <el-row style="margin-top: 10px;">
+                <el-col :span="24"><el-input v-model="ribaoMessage3" placeholder="请输入第三步"></el-input></el-col>
+            </el-row>
+            <div style="width: 100%;height:1px;background-color:orange;margin: 20px 0;"></div>
+            <el-row style="background-color:green;">金额</el-row>
+            <el-row>
+                <el-col :span="24">
+                    <el-table :data="ribaoTableData" style="width: 100%">
+                        <el-table-column prop="date" label="日期" width="180">
+                        </el-table-column>
+                        <el-table-column prop="qdcje" label="全店成交额">
+                        </el-table-column>
+                        <el-table-column prop="spcje" label="视频成交额">
+                        </el-table-column>
+                        <el-table-column prop="spzb" label="视频占全店成交额(100%)">
+                        </el-table-column>
+                        <el-table-column prop="twcje" label="图文成交额">
+                        </el-table-column>
+                        <el-table-column prop="twzb" label="图文占全店成交额(100%)">
+                        </el-table-column>
+                        <el-table-column prop="hjcje" label="合计成交额">
+                        </el-table-column>
+                        <el-table-column prop="hjzb" label="合计占全店成交额(100%)">
+                        </el-table-column>
+                    </el-table>
+                </el-col>
+            </el-row>
+            <div style="width: 100%;height:1px;background-color:orange;margin: 20px 0;"></div>
+            <el-row style="background-color:pink;">访客</el-row>
+            <el-row>
+                <el-col :span="24">
+                    <el-table :data="ribaoTableData" style="width: 100%">
+                        <el-table-column prop="date" label="日期" width="180">
+                        </el-table-column>
+                        <el-table-column prop="qdfk" label="全店访客">
+                        </el-table-column>
+                        <el-table-column prop="spfk" label="视频访客">
+                        </el-table-column>
+                        <el-table-column prop="spfkzb" label="视频占全店访客(100%)">
+                        </el-table-column>
+                        <el-table-column prop="twfk" label="图文访客">
+                        </el-table-column>
+                        <el-table-column prop="twfkzb" label="图文占全店访客(100%)">
+                        </el-table-column>
+                        <el-table-column prop="hjfk" label="合计成访客">
+                        </el-table-column>
+                        <el-table-column prop="hjfkzb" label="合计占全店访客(100%)">
+                        </el-table-column>
+                    </el-table>
+                </el-col>
+            </el-row>
+        </el-row>
+        <el-row v-show="type==='1'">
+            <el-row>
+                <el-col :span="6">
+                    <el-date-picker v-model="chooseDate2" type="daterange" unlink-panels align="right"
+                        range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期"
+                        :picker-options="pickerOptions" @change="clickDateDay">
+                    </el-date-picker>
+                </el-col>
+                <el-col :span="6" v-if="chooseDate2">
+                    <el-tooltip class="item" effect="dark" content="✔元元宝最棒！" placement="top">
+                        <el-button @click="dataOutput" icon="el-icon-check">输出</el-button>
+                    </el-tooltip>
+                    <el-tooltip class="item" effect="dark" content="如果遇到无数据，表示导入的excel中没有这个商品哦～" placement="top">
+                        <el-button style="margin-left: 10px;" @click="exportFile" icon="el-icon-download">导出</el-button>
+                    </el-tooltip>
+                </el-col>
+            </el-row>
+            <div style="width: 100%;height:1px;margin: 10px 0;"></div>
+            <template v-if="chooseDate2">
+                <el-card style="width: 100%;">
+                    <div slot="header" class="clearfix">
+                        <span>品类-全部商品（⚠️元元宝，注意哦这里是20条一页的）</span>
+                    </div>
+                    <el-row style="padding: 8px 16px;" v-for="(item,index) in allGoodsJsons" :key="index">
+                        <el-col :span="12">
+                            <el-input v-model="allGoodsJsons[index]" :placeholder="`请输入第${index+1}页`" type="textarea"
+                                :rows="2">
+                                <template slot="prepend">{{`第${index+1}页`}}</template>
+                            </el-input>
+                        </el-col>
+                        <el-col :span="6">
+                            <el-button :disabled="!!allGoodsJsons[index]"
+                                @click="getThisPage('all',index)">获取本页</el-button>
+                            <el-button @click="addPage('all')">下一页</el-button>
+                        </el-col>
+                    </el-row>
+                </el-card>
+                <div class="box-space">
+                    <el-card class="box-card">
+                        <div slot="header" class="clearfix">
+                            <span>内容-商家自制（完美支持批量上传哦～）</span>
+                        </div>
+                        <el-upload class="upload-demo" drag action="https://jsonplaceholder.typicode.com/posts/"
+                            multiple :on-change="handleChangeSelf"
+                            accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                            :auto-upload="false">
+                            <i class="el-icon-upload"></i>
+                            <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                        </el-upload>
+                    </el-card>
+                    <el-card class="box-card">
+                        <div slot="header" class="clearfix">
+                            <span>内容-内容营销（没想到我这么厉害吧～）</span>
+                        </div>
+                        <el-upload class="upload-demo" drag action="https://jsonplaceholder.typicode.com/posts/"
+                            multiple :on-change="handleChangeContent"
+                            accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                            :auto-upload="false">
+                            <i class="el-icon-upload"></i>
+                            <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                        </el-upload>
+                    </el-card>
+                    <el-card class="box-card">
+                        <div slot="header" class="clearfix">
+                            <span>内容-买家内容（这么难得东西都搞定啦😊）</span>
+                        </div>
+                        <el-upload class="upload-demo" drag action="https://jsonplaceholder.typicode.com/posts/"
+                            multiple :on-change="handleChangeBuyer"
+                            accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                            :auto-upload="false">
+                            <i class="el-icon-upload"></i>
+                            <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                        </el-upload>
+                    </el-card>
+                    <el-card class="box-card">
+                        <div slot="header" class="clearfix">
+                            <span>内容-其他（和小元宝贴贴）</span>
+                        </div>
+                        <el-upload class="upload-demo" drag action="https://jsonplaceholder.typicode.com/posts/"
+                            multiple :on-change="handleChangeOther"
+                            accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                            :auto-upload="false">
+                            <i class="el-icon-upload"></i>
+                            <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                        </el-upload>
+                    </el-card>
+                </div>
+                <div style="width: 100%;height:1px;background-color:orange;margin: 20px 0;"></div>
+                <el-table :data="calculateTableData" style="width: 100%">
+                    <el-table-column prop="productId" fixed label="商品ID" width="150px">
+                    </el-table-column>
+                    <el-table-column prop="productName" fixed label="商品名称" width="200px">
+                    </el-table-column>
+                    <el-table-column prop="payment" label="支付金额">
+                    </el-table-column>
+                    <el-table-column prop="refundAmount" label="退款金额">
+                    </el-table-column>
+                    <el-table-column prop="refundAmountRate" label="退款率(%)" width="100px">
+                    </el-table-column>
+                    <el-table-column prop="allVisitor" label="总访客数">
+                    </el-table-column>
+                    <el-table-column prop="selfAmount" label="商家自制-成交金额" width="100px">
+                    </el-table-column>
+                    <el-table-column prop="selfAmountRate" label="商家自制-成交金额占比(%)" width="100px">
+                    </el-table-column>
+                    <el-table-column prop="selfVisitor" label="商家自制-访客" width="100px">
+                    </el-table-column>
+                    <el-table-column prop="selfVisitorRate" label="商家自制-访客占比(%)" width="100px">
+                    </el-table-column>
+                    <el-table-column prop="contentAmount" label="内容营销-成交金额" width="100px">
+                    </el-table-column>
+                    <el-table-column prop="contentAmountRate" label="内容营销-成交金额占比(%)" width="100px">
+                    </el-table-column>
+                    <el-table-column prop="contentVisitor" label="内容营销-访客" width="100px">
+                    </el-table-column>
+                    <el-table-column prop="contentVisitorRate" label="内容营销-访客占比(%)" width="100px">
+                    </el-table-column>
+                    <el-table-column prop="buyerAmount" label="买家内容-成交金额" width="100px">
+                    </el-table-column>
+                    <el-table-column prop="buyerAmountRate" label="买家内容-成交金额占比(%)" width="100px">
+                    </el-table-column>
+                    <el-table-column prop="buyerVisitor" label="买家内容-访客" width="100px">
+                    </el-table-column>
+                    <el-table-column prop="buyerVisitorRate" label="买家内容-访客占比(%)" width="100px">
+                    </el-table-column>
+                    <el-table-column prop="otherAmount" label="其他-成交金额" width="100px">
+                    </el-table-column>
+                    <el-table-column prop="otherAmountRate" label="其他-成交金额占比(%)" width="100px">
+                    </el-table-column>
+                    <el-table-column prop="otherVisitor" label="其他-访客" width="100px">
+                    </el-table-column>
+                    <el-table-column prop="otherVisitorRate" label="其他-访客占比(%)" width="100px">
+                    </el-table-column>
+                </el-table>
+            </template>
+            <!-- <el-row>
+            <el-col :span="6">
+                <el-date-picker
+                    v-model="datetimerange"
+                    type="month"
+                    placeholder="选择月"
+                    @change="clickDate">
+                </el-date-picker>
+            </el-col>
+        </el-row>
+        <div style="width: 100%;height:1px;margin: 10px 0;"></div>
+        <el-row style="background-color: rgb(243, 209, 209);">
+            <el-col :span="3"><el-link :href="link.cje" target="_blank" v-show="link.cje">成交额</el-link></el-col>
+            <el-col :span="3"><el-link :href="link.twmx" target="_blank" v-show="link.twmx">图文明细</el-link></el-col>
+            <el-col :span="3"><el-link :href="link.spmx" target="_blank" v-show="link.spmx">视频明细</el-link></el-col>
+        </el-row>
+          <el-row>
+            <el-col :span="3">成交额</el-col>
+            <el-col :span="12"><el-input v-model="message" placeholder="请输入内容"></el-input></el-col>
+            <el-col :span="6"><el-button @click="output">输出</el-button></el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="24">
+                <el-table
+                :data="tableData"
+                style="width: 100%">
+                    <el-table-column
+                        prop="date"
+                        label="日期"
+                        width="180">
+                    </el-table-column>
+                    <el-table-column
+                        prop="articlePay"
+                        label="图文成交额">
+                    </el-table-column>
+                    <el-table-column
+                        prop="videoPay"
+                        label="短视频成交额">
+                    </el-table-column>
+                </el-table>
+            </el-col>
+          </el-row>
+          <div style="width: 100%;height:1px;background-color:orange;margin: 20px 0;"></div>
+          <el-row>
+            <el-col :span="3">图文明细</el-col>
+            <el-col :span="12"><el-input v-model="articleMessage" placeholder="请输入内容"></el-input></el-col>
+            <el-col :span="6"><el-button @click="articleOutput">输出</el-button></el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="24">
+                <el-table
+                :data="articleTableData"
+                style="width: 100%">
+                    <el-table-column
+                        prop="date"
+                        label="日期"
+                        width="180">
+                    </el-table-column>
+                    <el-table-column
+                        prop="pvUv"
+                        label="图文流量（进商uv）"
+                        width="180">
+                    </el-table-column>
+                    <el-table-column
+                        prop="ordByrCnt"
+                        label="下单人数">
+                    </el-table-column>
+                    <el-table-column
+                        prop="strollPv"
+                        label="图文浏览量（pv）">
+                    </el-table-column>
+                </el-table>
+            </el-col>
+          </el-row>
+          <div style="width: 100%;height:1px;background-color:orange;margin: 20px 0;"></div>
+          <el-row>
+            <el-col :span="3">视频明细</el-col>
+            <el-col :span="12"><el-input v-model="videoMessage" placeholder="请输入内容"></el-input></el-col>
+            <el-col :span="6"><el-button @click="videoOutput">输出</el-button></el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="24">
+                <el-table
+                :data="videoTableData"
+                style="width: 100%">
+                    <el-table-column
+                    prop="date"
+                    label="日期"
+                    width="180">
+                    </el-table-column>
+                    <el-table-column
+                        prop="pvUv"
+                        label="视频流量（进商uv）"
+                        width="180">
+                    </el-table-column>
+                    <el-table-column
+                        prop="ordByrCnt"
+                        label="下单人数">
+                    </el-table-column>
+                    <el-table-column
+                        prop="strollPv"
+                        label="视频浏览量（pv）">
+                    </el-table-column>
+                </el-table>
+            </el-col>
+          </el-row> -->
+        </el-row>
+    </div>
+    <script type="text/javascript">
+        new Vue({
+            el: '#app',
+            data: {
+                instance: null,
+                type: "0",
+                message: "",
+                articleMessage: "",
+                videoMessage: "",
+                ribaoMessage1: "",
+                ribaoMessage2: "",
+                ribaoMessage3: "",
+                tableData: [],
+                articleTableData: [],
+                videoTableData: [],
+                ribaoTableData: [],
+                calculateTableData: [], //  数据计算后的表格
+                datetimerange: '',
+                chooseDate: '',
+                chooseDate2: '',
+                link: {
+                    cje: null,
+                    twmx: null,
+                    spmx: null
+                },
+                linkDay: {
+                    rblink1: null,
+                    rblink2: null,
+                    rblink3: null
+                },
+                allGoodsParam: {
+                    url: '',
+                    page: 1,
+                },
+                allGoodsJsons: [''],
+                allGoods: [],
+                selfGoodsParam: {
+                    url: '',
+                    page: 1,
+                },
+                selfGoodsJsons: [],
+                contentGoodsParam: {
+                    url: '',
+                    page: 1,
+                },
+                contentGoodsJsons: [],
+                buyerGoodsParam: {
+                    url: '',
+                    page: 1,
+                },
+                buyerGoodsJsons: [],
+                otherGoodsParam: {
+                    url: '',
+                    page: 1,
+                },
+                otherGoodsJsons: [],
+                linkData: {
+                    rblink1: null,
+                    rblink2: null,
+                    rblink3: null,
+                    rblink4: null,
+                    rblink5: null,
+                },
+                pickerOptions: {
+                    shortcuts: [{
+                        text: '最近一周',
+                        onClick(picker) {
+                            const end = new Date();
+                            const start = new Date();
+                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+                            picker.$emit('pick', [start, end]);
+                        }
+                    }, {
+                        text: '最近一个月',
+                        onClick(picker) {
+                            const end = new Date();
+                            const start = new Date();
+                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+                            picker.$emit('pick', [start, end]);
+                        }
+                    }, {
+                        text: '最近三个月',
+                        onClick(picker) {
+                            const end = new Date();
+                            const start = new Date();
+                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
+                            picker.$emit('pick', [start, end]);
+                        }
+                    }]
+                },
+                addCount: 0,
+            },
+            methods: {
+                output() {
+                    const message = JSON.parse(this.message)
+                    const { data: { article, video } } = message
+                    const { interestPayAmt: articlePayAmt, statDate: articleStatDate } = article
+                    const { interestPayAmt: videoPayAmt } = video
+                    const tableData = []
+                    for (let index in articleStatDate) {
+                        item = {
+                            date: this.formData(articleStatDate[index]),
+                            articlePay: articlePayAmt[index],
+                            videoPay: videoPayAmt[index]
+                        }
+                        tableData.push(item)
+                    }
+                    this.tableData = tableData
+                },
+                articleOutput() {
+                    const message = JSON.parse(this.articleMessage)
+                    const { data: { strollIpvUv, strollPayOrdByrCnt, strollPv, statDate } } = message
+                    const articleTableData = []
+                    for (let index in statDate) {
+                        item = {
+                            date: this.formData(statDate[index]),
+                            pvUv: strollIpvUv[index],
+                            ordByrCnt: strollPayOrdByrCnt[index],
+                            strollPv: strollPv[index]
+                        }
+                        articleTableData.push(item)
+                    }
+                    this.articleTableData = articleTableData
+                },
+                videoOutput() {
+                    const message = JSON.parse(this.videoMessage)
+                    const { data: { strollIpvUv, strollPayOrdByrCnt, strollPv, statDate } } = message
+                    const videoTableData = []
+                    for (let index in statDate) {
+                        item = {
+                            date: this.formData(statDate[index]),
+                            pvUv: strollIpvUv[index],
+                            ordByrCnt: strollPayOrdByrCnt[index],
+                            strollPv: strollPv[index]
+                        }
+                        videoTableData.push(item)
+                    }
+                    this.videoTableData = videoTableData
+                },
+                rivbaoOutput() {
+                    const message1 = JSON.parse(this.ribaoMessage1)
+                    const message2 = JSON.parse(this.ribaoMessage2)
+                    const message3 = JSON.parse(this.ribaoMessage3)
+                    //  message1
+                    const { data: { video, article } } = message1
+                    const { interestPayAmt: videointerestPayAmt, portalContentGuideUv: videoportalContentGuideUv, statDate } = video
+                    const { interestPayAmt: articleinterestPayAmt, portalContentGuideUv: articleportalContentGuideUv } = article
+                    //  message2 全店金额
+                    const { content: { data: { payAmt, statDate: statDate2 } } } = message2
+                    const { value: payAmtValue } = payAmt
+                    //  message3 全店访客
+                    const { content: { data: { uv, statDate: statDate3 } } } = message3
+                    const { value: uvValue } = uv
+                    const ribaoTableData = []
+                    for (let index in statDate) {
+                        let item = {}
+                        if (statDate[index] === statDate2[index] && statDate[index] === statDate3[index]) {
+                            item.date = this.formday(statDate[index])
+                            item.qdcje = payAmtValue[index].toFixed(2) //  全店成交额
+                            item.spcje = videointerestPayAmt[index].toFixed(2) //  视频成交额
+                            item.spzb = `${+((Number(videointerestPayAmt[index]) / Number(payAmtValue[index])) * 100).toFixed(2)}%` //   视频占全店成交额
+                            item.twcje = articleinterestPayAmt[index].toFixed(2)   //  图文成交额
+                            item.twzb = `${+((Number(articleinterestPayAmt[index]) / Number(payAmtValue[index])) * 100).toFixed(2)}%` //   图文占全店成交额
+                            item.hjcje = (Number(videointerestPayAmt[index]) + Number(articleinterestPayAmt[index])).toFixed(2)   //  合计成交额
+                            item.hjzb = `${+(((Number(videointerestPayAmt[index]) + Number(articleinterestPayAmt[index])) / Number(payAmtValue[index])) * 100).toFixed(2)}%` //   合计占全店成交额
+
+                            item.qdfk = uvValue[index].toFixed(2) //  全店访客
+                            item.spfk = videoportalContentGuideUv[index].toFixed(2) //  视频访客
+                            item.spfkzb = `${+((Number(videoportalContentGuideUv[index]) / Number(uvValue[index])) * 100).toFixed(2)}%` //   视频占全店访客
+                            item.twfk = articleportalContentGuideUv[index].toFixed(2)   //  图文访客
+                            item.twfkzb = `${+((Number(articleportalContentGuideUv[index]) / Number(uvValue[index])) * 100).toFixed(2)}%` //   图文占全店访客
+                            item.hjfk = (Number(videoportalContentGuideUv[index]) + Number(articleportalContentGuideUv[index])).toFixed(2)   //  合计成访客
+                            item.hjfkzb = `${+(((Number(videoportalContentGuideUv[index]) + Number(articleportalContentGuideUv[index])) / Number(uvValue[index])) * 100).toFixed(2)}%` //   合计占全店访客
+
+                        }
+                        ribaoTableData.push(item)
+                    }
+                    this.ribaoTableData = ribaoTableData
+                },
+                formData(date) {
+                    const toMoon = new Date(date)
+                    const day = toMoon.getDate()
+                    const month = toMoon.getMonth() + 1
+                    const year = toMoon.getFullYear()
+                    return `${year}/${month}`
+                },
+                formday(date) {
+                    const toMoon = new Date(date)
+                    const day = toMoon.getDate()
+                    const month = toMoon.getMonth() + 1
+                    const year = toMoon.getFullYear()
+                    return `${year}/${month}/${day}`
+                },
+                clickDate() {
+                    console.log(this.datetimerange)
+                    const start = new Date(this.datetimerange)
+                    const oldend = new Date(this.datetimerange)
+                    const startday = start.getDate()
+                    const startmonth = start.getMonth() + 1
+                    const startyear = start.getFullYear()
+                    const oldendday = oldend.getDate()
+                    const oldendmonth = oldend.getMonth() + 2
+                    const oldendyear = oldend.getFullYear()
+                    const end = new Date(new Date(`${oldendyear}/${oldendmonth}/${oldendday}`) - 24 * 60 * 60 * 1000)
+                    const endday = end.getDate()
+                    const endmonth = end.getMonth() + 1
+                    const endyear = end.getFullYear()
+
+                    this.link = {
+                        cje: `https://sycm.taobao.com/s_content/portal/board/core/trend.json?dateType=month&dateRange=${startyear}-${startmonth}-${startday}%7C${endyear}-${endmonth}-${endday}&_=1662277303099&token=b8fbbef21`,
+                        twmx: `https://sycm.taobao.com/s_content/stroll/v2/trend.json?dateRange=${startyear}-${startmonth}-${startday}%7C${endyear}-${endmonth}-${endday}&dateType=month&contentType=tuwen&accountRole=all&indexCode=&_=1662281157809&token=b8fbbef21`,
+                        spmx: `https://sycm.taobao.com/s_content/stroll/v2/trend.json?dateRange=${startyear}-${startmonth}-${startday}%7C${endyear}-${endmonth}-${endday}&dateType=month&contentType=video&accountRole=all&indexCode=&_=1662281157809&token=b8fbbef21`,
+                        nrgk: `https://sycm.taobao.com/s_content/portal/board/core/trend.json?dateType=day&dateRange=${startyear}-${startmonth}-${startday}%7C${endyear}-${endmonth}-${endday}&_=1662305119999&token=a4a880682`,
+                        fks: `https://sycm.taobao.com/portal/coreIndex/getTrend.json?dateType=day&dateRange=${startyear}-${startmonth}-${startday}%7C${endyear}-${endmonth}-${endday}&indexCode=uv&device=0&includeRival=true&_=1662305850737&token=a4a880682`
+                    }
+                },
+                clickDateEveryDay() {
+                    const start = new Date(this.chooseDate)
+                    const oldend = new Date(this.chooseDate)
+                    const startday = start.getDate()
+                    const startmonth = start.getMonth() + 1
+                    const startyear = start.getFullYear()
+                    this.linkDay = {
+                        rblink1: `https://sycm.taobao.com/s_content/portal/board/core/trend.json?dateType=day&dateRange=${startyear}-${startmonth}-${startday}%7C${startyear}-${startmonth}-${startday}&_=1662389218789&token=49a2032d4`,
+                        rblink2: `https://sycm.taobao.com/portal/coreIndex/getTrend.json?dateType=day&dateRange=${startyear}-${startmonth}-${startday}%7C${startyear}-${startmonth}-${startday}&indexCode=payAmt&device=0&includeRival=true&_=1662389761937&token=49a2032d4`,
+                        rblink3: `https://sycm.taobao.com/portal/coreIndex/getTrend.json?dateType=day&dateRange=${startyear}-${startmonth}-${startday}%7C${startyear}-${startmonth}-${startday}&indexCode=uv&device=0&includeRival=true&_=1662389630610&token=49a2032d4`
+                    }
+                },
+                clickDateDay() {
+                    console.log('this.chooseDate2', this.chooseDate2);
+                    const startDate = new Date(this.chooseDate2[0]);
+                    const endDate = new Date(this.chooseDate2[1]);
+                    const startday = startDate.getDate();
+                    const startmonth = startDate.getMonth() + 1;
+                    const startyear = startDate.getFullYear();
+                    const endday = endDate.getDate();
+                    const endmonth = endDate.getMonth() + 1;
+                    const endyear = endDate.getFullYear();
+                    this.allGoodsParam.url = `https://sycm.taobao.com/cc/long/period/nodistinct/item/view/top.json?dateRange=${startyear}-${startmonth}-${startday}%7C${endyear}-${endmonth}-${endday}%2C${startyear}-${startmonth}-${startday}%7C${endyear}-${endmonth}-${endday}&dateType=compareRange&pageSize=20`;
+                    this.selfGoodsParam.url = `https://sycm.taobao.com/s_content/v2/video/single/item/list.json?dateRange=${startyear}-${startmonth}-${startday}%7C${endyear}-${endmonth}-${endday}&dateType=recent7&pageSize=10`;
+                    this.contentGoodsParam.url = `https://sycm.taobao.com/s_content/v2/video/single/item/list.json?dateRange=${startyear}-${startmonth}-${startday}%7C${endyear}-${endmonth}-${endday}&dateType=recent7&pageSize=10`;
+                    this.buyerGoodsParam.url = `https://sycm.taobao.com/s_content/v2/video/single/item/list.json?dateRange=${startyear}-${startmonth}-${startday}%7C${endyear}-${endmonth}-${endday}&dateType=recent7&pageSize=10`;
+                    this.otherGoodsParam.url = `https://sycm.taobao.com/s_content/v2/video/single/item/list.json?dateRange=${startyear}-${startmonth}-${startday}%7C${endyear}-${endmonth}-${endday}&dateType=recent7&pageSize=10`;
+                },
+                getThisPage(type, index) {
+                    let url = ''
+                    switch (type) {
+                        case 'all':
+                            url = `${this.allGoodsParam.url}&page=${index + 1}&order=desc&orderBy=payAmt&device=0&compareType=cycle&keyword=&follow=false&cateId=&cateLevel=&indexCode=payAmt%2CpayItmCnt%2CsucRefundAmt%2CitemCartCnt%2CitmUv&_=1708499132564&token=de3919664`;
+                            break;
+                        case 'self':
+                            url = `${this.selfGoodsParam.url}&page=${index + 1}&order=desc&orderBy=interestPayAmt&keyword=&accountRole=guanghe-seller&indexCode=contentItemClickCnt%2CitemFansClickPv%2CcontentCltTimes%2CcontentCartItmCnt%2CinterestPayAmt&_=1708481342586&token=de3919664`;
+                            break;
+                        case 'content':
+                            url = `${this.contentGoodsParam.url}&page=${index + 1}&order=desc&orderBy=interestPayAmt&keyword=&accountRole=guanghe-busi_coop&indexCode=contentItemClickCnt%2CitemFansClickPv%2CcontentCltTimes%2CcontentCartItmCnt%2CinterestPayAmt&_=1708484855988&token=de3919664`;
+                            break;
+                        case 'buyer':
+                            url = `${this.buyerGoodsParam.url}&page=${index + 1}&order=desc&orderBy=interestPayAmt&keyword=&accountRole=guanghe-ugc&indexCode=contentItemClickCnt%2CitemFansClickPv%2CcontentCltTimes%2CcontentCartItmCnt%2CinterestPayAmt&_=1708484903967&token=de3919664`;
+                            break;
+                        case 'other':
+                            url = `${this.otherGoodsParam.url}&page=${index + 1}&order=desc&orderBy=interestPayAmt&keyword=&accountRole=guanghe-else&indexCode=contentItemClickCnt%2CitemFansClickPv%2CcontentCltTimes%2CcontentCartItmCnt%2CinterestPayAmt&_=1708484942932&token=de3919664`;
+                            break;
+                        default:
+                            break;
+                    }
+                    window.open(url, "_blank");
+                },
+                addPage(type) {
+                    switch (type) {
+                        case 'all':
+                            if (this.allGoodsJsons.length > 10) {
+                                this.addCount += 1
+                                if (this.addCount > 5) {
+                                    this.$notify({
+                                        title: '方子关心',
+                                        message: '有这么多呀~给元宝揉揉肩',
+                                        duration: 0
+                                    });
+                                }
+                            }
+                            this.allGoodsJsons.push('');
+                            break;
+                        case 'self':
+                            if (this.selfGoodsJsons.length > 10) {
+                                this.addCount += 1
+                                if (this.addCount > 5) {
+                                    this.$notify({
+                                        title: '🩷',
+                                        message: '嘿嘿，果然爱连绵不绝',
+                                        duration: 0
+                                    });
+                                } else {
+                                    this.$notify({
+                                        title: '敲猪头',
+                                        message: '别加啦！哪有这么多呀',
+                                        duration: 0
+                                    });
+                                }
+                            } else {
+                                this.selfGoodsJsons.push('');
+                            }
+                            break;
+                        case 'content':
+                            if (this.contentGoodsJsons.length > 10) {
+                                this.addCount += 1
+                                if (this.addCount > 5) {
+                                    this.$notify({
+                                        title: '🩷',
+                                        message: '嘿嘿，果然爱连绵不绝',
+                                        duration: 0
+                                    });
+                                } else {
+                                    this.$notify({
+                                        title: '敲猪头',
+                                        message: '别加啦！哪有这么多呀',
+                                        duration: 0
+                                    });
+                                }
+                            } else {
+                                this.contentGoodsJsons.push('');
+                            }
+                            break;
+                        case 'buyer':
+                            if (this.buyerGoodsJsons.length > 10) {
+                                this.addCount += 1
+                                if (this.addCount > 5) {
+                                    this.$notify({
+                                        title: '🩷',
+                                        message: '嘿嘿，果然爱连绵不绝',
+                                        duration: 0
+                                    });
+                                } else {
+                                    this.$notify({
+                                        title: '敲猪头',
+                                        message: '别加啦！哪有这么多呀',
+                                        duration: 0
+                                    });
+                                }
+                            } else {
+                                this.buyerGoodsJsons.push('');
+                            }
+                            break;
+                        case 'other':
+                            if (this.otherGoodsJsons.length > 10) {
+                                this.addCount += 1
+                                if (this.addCount > 5) {
+                                    this.$notify({
+                                        title: '🩷',
+                                        message: '嘿嘿，果然爱连绵不绝',
+                                        duration: 0
+                                    });
+                                } else {
+                                    this.$notify({
+                                        title: '敲猪头',
+                                        message: '别加啦！哪有这么多呀',
+                                        duration: 0
+                                    });
+                                }
+                            } else {
+                                this.otherGoodsJsons.push('');
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                },
+                dataOutput() {
+                    if (this.allGoodsJsons.length === 1 && this.allGoodsJsons[0] === '') {
+                        this.$notify({
+                            title: '敲猪头',
+                            message: '猪猪元🐷！至少要填一个“品类-全部商品”',
+                            duration: 0
+                        });
+                        return
+                    }
+                    this.initJson();
+                },
+                initJson() {
+                    this.allGoodsJsons.forEach(element => {
+                        if (element !== '') {
+                            const myJson = JSON.parse(element);
+                            this.allGoods = [...this.allGoods, ...myJson.data.data]
+                        }
+                    });
+                    const productSelf = [];
+                    const productContent = [];
+                    const productBuyer = [];
+                    const productOther = [];
+                    this.selfGoodsJsons.forEach(element => {
+                        const index = productSelf.findIndex(v => v.productId !== element.productId)
+                        if (index === -1) {
+                            productSelf.push(element);
+                        } else {
+                            productSelf[index].amount += element.amount;
+                            productSelf[index].visitor += element.visitor;
+                        }
+                    });
+                    this.contentGoodsJsons.forEach(element => {
+                        const index = productContent.findIndex(v => v.productId !== element.productId)
+                        if (index === -1) {
+                            productContent.push(element);
+                        } else {
+                            productContent[index].amount += element.amount;
+                            productContent[index].visitor += element.visitor;
+                        }
+                    });
+                    this.buyerGoodsJsons.forEach(element => {
+                        const index = productBuyer.findIndex(v => v.productId !== element.productId)
+                        if (index === -1) {
+                            productBuyer.push(element);
+                        } else {
+                            productBuyer[index].amount += element.amount;
+                            productBuyer[index].visitor += element.visitor;
+                        }
+                    });
+                    this.otherGoodsJsons.forEach(element => {
+                        const index = productOther.findIndex(v => v.productId !== element.productId)
+                        if (index === -1) {
+                            productOther.push(element);
+                        } else {
+                            productOther[index].amount += element.amount;
+                            productOther[index].visitor += element.visitor;
+                        }
+                    });
+                    this.allGoods.forEach(element => {
+                        const data = {
+                            productId: element.item.itemId, //  商品id
+                            productName: element.item.title,    //  商品名称
+                            payment: element.payAmt.value.toFixed(2),   //  总金额
+                            refundAmount: element.sucRefundAmt.value.toFixed(2),    //  退款金额
+                            refundAmountRate: `${+((Number(element.sucRefundAmt.value.toFixed(2)) / Number(element.payAmt.value.toFixed(2))) * 100).toFixed(2)}%`,  //  退款率
+                            allVisitor: element.itmUv.value,
+                        }
+                        const selfGoodsItem = this.selfGoodsJsons.filter(item => item.productId === element.item.itemId)
+                        if (selfGoodsItem.length > 0) {
+                            data.selfAmount = selfGoodsItem[0].amount.toFixed(2);
+                            data.selfAmountRate = `${+((Number(data.selfAmount) / Number(element.payAmt.value.toFixed(2))) * 100).toFixed(2)}%`;  //  商家自制
+                            data.selfVisitor = selfGoodsItem[0].visitor.toFixed(2);
+                            data.selfVisitorRate = `${+((Number(data.selfVisitor) / Number(data.allVisitor.toFixed(2))) * 100).toFixed(2)}%`;  //  内容
+                        } else {
+                            data.selfAmount = '无数据';
+                            data.selfAmountRate = '无数据';
+                            data.selfVisitor = '无数据';
+                            data.selfVisitorRate = '无数据';
+                        }
+                        const contentGoodsItem = this.contentGoodsJsons.filter(item => item.productId === element.item.itemId)
+                        if (contentGoodsItem.length > 0) {
+                            data.contentAmount = contentGoodsItem[0].amount.toFixed(2);
+                            data.contentAmountRate = `${+((Number(data.contentAmount) / Number(element.payAmt.value.toFixed(2))) * 100).toFixed(2)}%`;  //  内容
+                            data.contentVisitor = contentGoodsItem[0].visitor.toFixed(2);
+                            data.contentVisitorRate = `${+((Number(data.contentVisitor) / Number(data.allVisitor.toFixed(2))) * 100).toFixed(2)}%`;  //  内容
+                        } else {
+                            data.contentAmount = '无数据';
+                            data.contentAmountRate = '无数据';
+                            data.contentVisitor = '无数据';
+                            data.contentVisitorRate = '无数据';
+                        }
+                        const buyerGoodsItem = this.buyerGoodsJsons.filter(item => item.productId === element.item.itemId)
+                        if (buyerGoodsItem.length > 0) {
+                            data.buyerAmount = buyerGoodsItem[0].amount.toFixed(2);
+                            data.buyerAmountRate = `${+((Number(data.buyerAmount) / Number(element.payAmt.value.toFixed(2))) * 100).toFixed(2)}%`;  //  内容
+                            data.buyerVisitor = buyerGoodsItem[0].visitor.toFixed(2);
+                            data.buyerVisitorRate = `${+((Number(data.buyerVisitor) / Number(data.allVisitor.toFixed(2))) * 100).toFixed(2)}%`;  //  内容
+                        } else {
+                            data.buyerAmount = '无数据';
+                            data.buyerAmountRate = '无数据';
+                            data.buyerVisitor = '无数据';
+                            data.buyerVisitorRate = '无数据';
+                        }
+                        const otherGoodsItem = this.otherGoodsJsons.filter(item => item.productId === element.item.itemId)
+                        if (otherGoodsItem.length > 0) {
+                            data.otherAmount = otherGoodsItem[0].amount.toFixed(2);
+                            data.otherAmountRate = `${+((Number(data.otherAmount) / Number(element.payAmt.value.toFixed(2))) * 100).toFixed(2)}%`;  //  内容
+                            data.otherVisitor = otherGoodsItem[0].visitor.toFixed(2);
+                            data.otherVisitorRate = `${+((Number(data.otherVisitor) / Number(data.allVisitor.toFixed(2))) * 100).toFixed(2)}%`;  //  内容
+                        } else {
+                            data.otherAmount = '无数据';
+                            data.otherAmountRate = '无数据';
+                            data.otherVisitor = '无数据';
+                            data.otherVisitorRate = '无数据';
+                        }
+                        this.calculateTableData.push(data)
+                    })
+                },
+                handleChangeSelf(file, fileList) {
+                    this.importfxx(file.raw, 'self');
+                },
+                handleChangeContent(file, fileList) {
+                    this.importfxx(file.raw, 'content');
+                },
+                handleChangeBuyer(file, fileList) {
+                    this.importfxx(file.raw, 'buyer');
+                },
+                handleChangeOther(file, fileList) {
+                    this.importfxx(file.raw, 'other');
+                },
+                importfxx(obj, type) {
+                    let _this = this;//将当前this重新指向，以防this改变
+                    // 通过DOM取文件数据
+                    this.file = obj;
+                    var rABS = false; //是否将文件读取为二进制字符串
+                    var f = this.file;
+                    var reader = new FileReader();
+                    //if (!FileReader.prototype.readAsBinaryString) {
+                    FileReader.prototype.readAsBinaryString = function (f) {
+                        var binary = "";
+                        var rABS = false; //是否将文件读取为二进制字符串
+                        var pt = this;
+                        var wb; //读取完成的数据
+                        var outdata;
+                        var reader = new FileReader();
+                        reader.onload = function (e) {
+                            var bytes = new Uint8Array(reader.result);
+                            var length = bytes.byteLength;
+                            let arr = [];
+                            for (var i = 0; i < length; i++) {
+                                binary += String.fromCharCode(bytes[i]);
+                            }
+                            if (rABS) {
+                                wb = XLSX.read(btoa(fixdata(binary)), {
+                                    //手动转化
+                                    type: "base64"
+                                });
+                            } else {
+                                wb = XLSX.read(binary, {
+                                    type: "binary"
+                                });
+                            }
+                            outdata = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]); //outdata就是你想要的东西
+                            outdata.forEach((item, index) => {
+                                if (index > 2) {
+                                    let obj = {};
+                                    obj.productId = item["__EMPTY_1"];
+                                    obj.visitor = Number(item["__EMPTY_20"].replace(/,/g, ''));
+                                    obj.amount = Number(item["__EMPTY_28"].replace(/,/g, ''));
+                                    switch (type) {
+                                        case 'self':
+                                            _this.selfGoodsJsons.push(obj)
+                                            break;
+                                        case 'content':
+                                            _this.contentGoodsJsons.push(obj)
+                                            break;
+                                        case 'buyer':
+                                            _this.buyerGoodsJsons.push(obj)
+                                            break;
+                                        case 'other':
+                                            _this.otherGoodsJsons.push(obj)
+                                            break;
+                                        default:
+                                            break;
+                                    }
+                                }
+                            })
+                            return arr;
+                        };
+                        reader.readAsArrayBuffer(f);
+                    };
+
+                    if (rABS) {
+                        reader.readAsArrayBuffer(f);
+                    } else {
+                        reader.readAsBinaryString(f);
+                    }
+                },
+                exportFile() {
+                    if (this.calculateTableData.length === 0) {
+                        this.$notify({
+                            title: '方子警告！',
+                            message: '猪头！要先点输出哦',
+                            duration: 0
+                        });
+                        return;
+                    }
+                    const exportData = JSON.parse(JSON.stringify(this.calculateTableData)).map(obj => {
+                        return {
+                            "商品ID": obj.productId,
+                            "商品名称": obj.productName,
+                            "支付金额": obj.payment,
+                            "退款金额": obj.refundAmount,
+                            "退款率(%)": obj.refundAmountRate,
+                            "总访客数": obj.allVisitor,
+                            "商家自制-成交金额": obj.selfAmount,
+                            "商家自制-成交金额占比(%)": obj.selfAmountRate,
+                            "商家自制-访客": obj.selfVisitor,
+                            "商家自制-访客占比(%)": obj.selfVisitorRate,
+                            "内容营销-成交金额": obj.contentAmount,
+                            "内容营销-成交金额占比(%)": obj.contentAmountRate,
+                            "内容营销-访客": obj.contentVisitor,
+                            "内容营销-访客占比(%)": obj.contentVisitorRate,
+                            "买家内容-成交金额": obj.buyerAmount,
+                            "买家内容-成交金额占比(%)": obj.buyerAmountRate,
+                            "买家内容-访客": obj.buyerVisitor,
+                            "买家内容-访客占比(%)": obj.buyerVisitorRate,
+                            "其他-成交金额": obj.otherAmount,
+                            "其他-成交金额占比(%)": obj.otherAmountRate,
+                            "其他-访客": obj.otherVisitor,
+                            "其他-访客占比(%)": obj.otherVisitorRate,
+                        }
+                    })
+                    const workBook = XLSX.utils.book_new();
+                    const workSheet = XLSX.utils.json_to_sheet(exportData);
+                    XLSX.utils.book_append_sheet(workBook, workSheet, 'sheet');
+                    const startDate = new Date(this.chooseDate2[0]);
+                    const endDate = new Date(this.chooseDate2[1]);
+                    const startday = startDate.getDate();
+                    const startmonth = startDate.getMonth() + 1;
+                    const startyear = startDate.getFullYear();
+                    const endday = endDate.getDate();
+                    const endmonth = endDate.getMonth() + 1;
+                    const endyear = endDate.getFullYear();
+                    XLSX.writeFile(workBook, `${startyear}${startmonth}${startday}-${endyear}${endmonth}${endday}数据对比.xlsx`);
+                },
+            },
+            beforeMount() {
+                console.log("挂载前生命周期");
+            },
+            mounted() {
+                console.log("挂载完成生命周期");
+                const date = new Date();
+                const day = date.getDate();
+                const month = date.getMonth() + 1;
+                if (month === 3 && day === 12) {
+                    this.$notify({
+                        title: '今天是我的生日哦',
+                        message: '嘿嘿～',
+                        duration: 0
+                    });
+                }
+                if (month === 10 && day === 13) {
+                    this.$notify({
+                        title: '🎂生日快乐！！',
+                        message: '生日快乐呀～小元宝',
+                        duration: 0
+                    });
+                }
+            },
+            watch: {
+                'message'() {
+                    console.log("监视器调用");
+                }
+            }
+        })
+
+
+        // 成交额 https://sycm.taobao.com/s_content/portal/board/core/trend.json?dateType=month&dateRange=2022-08-01%7C2022-08-31&_=1662277303099&token=b8fbbef21
+        // 图文数据明细 https://sycm.taobao.com/s_content/stroll/v2/trend.json?dateRange=2022-08-01%7C2022-08-31&dateType=month&contentType=tuwen&accountRole=all&indexCode=&_=1662281157809&token=b8fbbef21
+        // 视频数据明细 https://sycm.taobao.com/s_content/stroll/v2/trend.json?dateRange=2022-08-01%7C2022-08-31&dateType=month&contentType=video&accountRole=all&indexCode=&_=1662282113378&token=b8fbbef21
+    </script>
+    <style>
+        .box-card {
+            margin-top: 10px;
+            width: 48vw;
+        }
+
+        .box-space {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-column-gap: 18px;
+        }
+
+        .upload-demo {
+            width: 100%;
+        }
+    </style>
+</body>
+
+</html>
