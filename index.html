@@ -99,7 +99,7 @@
                 </el-col>
             </el-row>
         </el-row>
-        <el-row v-show="type==='1'">
+        <el-row v-show="type==='1'" v-loading="isLoading">
             <el-row>
                 <el-col :span="6">
                     <el-date-picker v-model="chooseDate2" type="daterange" unlink-panels align="right"
@@ -220,18 +220,18 @@
                     </el-table-column>
                     <el-table-column prop="buyerAmountRate" label="买家内容-成交金额占比(%)" width="100px">
                     </el-table-column>
-                    <el-table-column prop="buyerVisitor" label="买家内容-访客" width="100px">
+                    <!-- <el-table-column prop="buyerVisitor" label="买家内容-访客" width="100px">
                     </el-table-column>
                     <el-table-column prop="buyerVisitorRate" label="买家内容-访客占比(%)" width="100px">
-                    </el-table-column>
+                    </el-table-column> -->
                     <el-table-column prop="otherAmount" label="其他-成交金额" width="100px">
                     </el-table-column>
                     <el-table-column prop="otherAmountRate" label="其他-成交金额占比(%)" width="100px">
                     </el-table-column>
-                    <el-table-column prop="otherVisitor" label="其他-访客" width="100px">
+                    <!-- <el-table-column prop="otherVisitor" label="其他-访客" width="100px">
                     </el-table-column>
                     <el-table-column prop="otherVisitorRate" label="其他-访客占比(%)" width="100px">
-                    </el-table-column>
+                    </el-table-column> -->
                 </el-table>
             </template>
             <!-- <el-row>
@@ -346,6 +346,7 @@
         new Vue({
             el: '#app',
             data: {
+                isLoading: false,
                 instance: null,
                 type: "0",
                 message: "",
@@ -720,6 +721,7 @@
                     this.initJson();
                 },
                 initJson() {
+                    this.isLoading = true;
                     this.allGoodsJsons.forEach(element => {
                         if (element !== '') {
                             const myJson = JSON.parse(element);
@@ -803,28 +805,29 @@
                         if (buyerGoodsItem.length > 0) {
                             data.buyerAmount = buyerGoodsItem[0].amount.toFixed(2);
                             data.buyerAmountRate = `${+((Number(data.buyerAmount) / Number(element.payAmt.value.toFixed(2))) * 100).toFixed(2)}%`;  //  内容
-                            data.buyerVisitor = buyerGoodsItem[0].visitor.toFixed(2);
-                            data.buyerVisitorRate = `${+((Number(data.buyerVisitor) / Number(data.allVisitor.toFixed(2))) * 100).toFixed(2)}%`;  //  内容
+                            // data.buyerVisitor = buyerGoodsItem[0].visitor.toFixed(2);
+                            // data.buyerVisitorRate = `${+((Number(data.buyerVisitor) / Number(data.allVisitor.toFixed(2))) * 100).toFixed(2)}%`;  //  内容
                         } else {
                             data.buyerAmount = '无数据';
                             data.buyerAmountRate = '无数据';
-                            data.buyerVisitor = '无数据';
-                            data.buyerVisitorRate = '无数据';
+                            // data.buyerVisitor = '无数据';
+                            // data.buyerVisitorRate = '无数据';
                         }
                         const otherGoodsItem = this.otherGoodsJsons.filter(item => item.productId === element.item.itemId)
                         if (otherGoodsItem.length > 0) {
                             data.otherAmount = otherGoodsItem[0].amount.toFixed(2);
                             data.otherAmountRate = `${+((Number(data.otherAmount) / Number(element.payAmt.value.toFixed(2))) * 100).toFixed(2)}%`;  //  内容
-                            data.otherVisitor = otherGoodsItem[0].visitor.toFixed(2);
-                            data.otherVisitorRate = `${+((Number(data.otherVisitor) / Number(data.allVisitor.toFixed(2))) * 100).toFixed(2)}%`;  //  内容
+                            // data.otherVisitor = otherGoodsItem[0].visitor.toFixed(2);
+                            // data.otherVisitorRate = `${+((Number(data.otherVisitor) / Number(data.allVisitor.toFixed(2))) * 100).toFixed(2)}%`;  //  内容
                         } else {
                             data.otherAmount = '无数据';
                             data.otherAmountRate = '无数据';
-                            data.otherVisitor = '无数据';
-                            data.otherVisitorRate = '无数据';
+                            // data.otherVisitor = '无数据';
+                            // data.otherVisitorRate = '无数据';
                         }
                         this.calculateTableData.push(data)
                     })
+                    this.isLoading = false;
                 },
                 handleChangeSelf(file, fileList) {
                     this.importfxx(file.raw, 'self');
@@ -840,6 +843,7 @@
                 },
                 importfxx(obj, type) {
                     let _this = this;//将当前this重新指向，以防this改变
+                    _this.isLoading = true;
                     // 通过DOM取文件数据
                     this.file = obj;
                     var rABS = false; //是否将文件读取为二进制字符串
@@ -874,20 +878,29 @@
                             outdata.forEach((item, index) => {
                                 if (index > 2) {
                                     let obj = {};
-                                    obj.productId = item["__EMPTY_1"];
-                                    obj.visitor = Number(item["__EMPTY_20"].replace(/,/g, ''));
-                                    obj.amount = Number(item["__EMPTY_28"].replace(/,/g, ''));
                                     switch (type) {
                                         case 'self':
+                                            obj.productId = item["__EMPTY_1"].split(',')[0];
+                                            obj.visitor = Number(item["__EMPTY_20"].replace(/,/g, ''));
+                                            obj.amount = Number(item["__EMPTY_28"].replace(/,/g, ''));
                                             _this.selfGoodsJsons.push(obj)
                                             break;
                                         case 'content':
+                                            obj.productId = item["__EMPTY_1"].split(',')[0];
+                                            obj.visitor = Number(item["__EMPTY_15"].replace(/,/g, ''));
+                                            obj.amount = Number(item["__EMPTY_23"].replace(/,/g, ''));
                                             _this.contentGoodsJsons.push(obj)
                                             break;
                                         case 'buyer':
+                                            obj.productId = item["__EMPTY"].split(',')[0];
+                                            obj.visitor = 0;
+                                            obj.amount = Number(item["__EMPTY_5"].replace(/,/g, ''));
                                             _this.buyerGoodsJsons.push(obj)
                                             break;
                                         case 'other':
+                                            obj.productId = item["__EMPTY"].split(',')[0];
+                                            obj.visitor = 0;
+                                            obj.amount = Number(item["__EMPTY_5"].replace(/,/g, ''));
                                             _this.otherGoodsJsons.push(obj)
                                             break;
                                         default:
@@ -895,6 +908,7 @@
                                     }
                                 }
                             })
+                            _this.isLoading = false;
                             return arr;
                         };
                         reader.readAsArrayBuffer(f);
@@ -915,6 +929,7 @@
                         });
                         return;
                     }
+                    this.isLoading = true;
                     const exportData = JSON.parse(JSON.stringify(this.calculateTableData)).map(obj => {
                         return {
                             "商品ID": obj.productId,
@@ -933,12 +948,12 @@
                             "内容营销-访客占比(%)": obj.contentVisitorRate,
                             "买家内容-成交金额": obj.buyerAmount,
                             "买家内容-成交金额占比(%)": obj.buyerAmountRate,
-                            "买家内容-访客": obj.buyerVisitor,
-                            "买家内容-访客占比(%)": obj.buyerVisitorRate,
+                            // "买家内容-访客": obj.buyerVisitor,
+                            // "买家内容-访客占比(%)": obj.buyerVisitorRate,
                             "其他-成交金额": obj.otherAmount,
                             "其他-成交金额占比(%)": obj.otherAmountRate,
-                            "其他-访客": obj.otherVisitor,
-                            "其他-访客占比(%)": obj.otherVisitorRate,
+                            // "其他-访客": obj.otherVisitor,
+                            // "其他-访客占比(%)": obj.otherVisitorRate,
                         }
                     })
                     const workBook = XLSX.utils.book_new();
@@ -952,7 +967,8 @@
                     const endday = endDate.getDate();
                     const endmonth = endDate.getMonth() + 1;
                     const endyear = endDate.getFullYear();
-                    XLSX.writeFile(workBook, `${startyear}${startmonth}${startday}-${endyear}${endmonth}${endday}数据对比.xlsx`);
+                    XLSX.writeFile(workBook, `${startyear}${startmonth < 10 ? `0${startmonth}` : startmonth}${startday < 10 ? `0${startday}` : startday}-${endyear}${endmonth < 10 ? `0${endmonth}` : endmonth}${endday < 10 ? `0${endday}` : endday}数据对比.xlsx`);
+                    this.isLoading = false;
                 },
             },
             beforeMount() {
