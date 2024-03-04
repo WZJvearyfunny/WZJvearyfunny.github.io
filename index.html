@@ -175,7 +175,7 @@
                     </el-card>
                     <el-card class="box-card">
                         <div slot="header" class="clearfix">
-                            <span>内容-其他（和小元宝贴贴）</span>
+                            <span>内容-微详情（和小元宝贴贴,我要疯狂贴贴！！！！）</span>
                         </div>
                         <el-upload class="upload-demo" drag action="https://jsonplaceholder.typicode.com/posts/"
                             multiple :on-change="handleChangeOther"
@@ -194,39 +194,45 @@
                     </el-table-column>
                     <el-table-column prop="payment" label="支付金额">
                     </el-table-column>
-                    <el-table-column prop="refundAmount" label="退款金额">
+                    <el-table-column prop="refundAmount" label="成功退款金额">
+                    </el-table-column>
+                    <el-table-column prop="afterRefundAmount" label="退款后">
                     </el-table-column>
                     <el-table-column prop="refundAmountRate" label="退款率(%)" width="100px">
                     </el-table-column>
                     <el-table-column prop="allVisitor" label="总访客数">
                     </el-table-column>
-                    <el-table-column prop="selfAmount" label="商家自制-成交金额" width="100px">
+                    <el-table-column prop="selfAmount" label="商家自制-成交" width="100px">
                     </el-table-column>
-                    <el-table-column prop="selfAmountRate" label="商家自制-成交金额占比(%)" width="100px">
+                    <el-table-column prop="selfAmountRate" label="商家自制-成交占比(%)" width="100px">
                     </el-table-column>
                     <el-table-column prop="selfVisitor" label="商家自制-访客" width="100px">
                     </el-table-column>
                     <el-table-column prop="selfVisitorRate" label="商家自制-访客占比(%)" width="100px">
                     </el-table-column>
-                    <el-table-column prop="contentAmount" label="内容营销-成交金额" width="100px">
+                    <el-table-column prop="contentAmount" label="内容营销-成交" width="100px">
                     </el-table-column>
-                    <el-table-column prop="contentAmountRate" label="内容营销-成交金额占比(%)" width="100px">
+                    <el-table-column prop="contentAmountRate" label="内容营销-成交占比(%)" width="100px">
                     </el-table-column>
                     <el-table-column prop="contentVisitor" label="内容营销-访客" width="100px">
                     </el-table-column>
                     <el-table-column prop="contentVisitorRate" label="内容营销-访客占比(%)" width="100px">
                     </el-table-column>
-                    <el-table-column prop="buyerAmount" label="买家内容-成交金额" width="100px">
+                    <el-table-column prop="buyerAmount" label="买家秀-成交" width="100px">
                     </el-table-column>
-                    <el-table-column prop="buyerAmountRate" label="买家内容-成交金额占比(%)" width="100px">
+                    <el-table-column prop="buyerAmountRate" label="买家秀-成交占比(%)" width="100px">
                     </el-table-column>
                     <!-- <el-table-column prop="buyerVisitor" label="买家内容-访客" width="100px">
                     </el-table-column>
                     <el-table-column prop="buyerVisitorRate" label="买家内容-访客占比(%)" width="100px">
                     </el-table-column> -->
-                    <el-table-column prop="otherAmount" label="其他-成交金额" width="100px">
+                    <el-table-column prop="otherAmount" label="微详情-成交" width="100px">
                     </el-table-column>
-                    <el-table-column prop="otherAmountRate" label="其他-成交金额占比(%)" width="100px">
+                    <el-table-column prop="otherAmountRate" label="微详情-成交占比(%)" width="100px">
+                    </el-table-column>
+                    <el-table-column prop="saleAllAmount" label="合计-成交" width="100px">
+                    </el-table-column>
+                    <el-table-column prop="saleAllAmountRate" label="合计-成交占比(%)" width="100px">
                     </el-table-column>
                     <!-- <el-table-column prop="otherVisitor" label="其他-访客" width="100px">
                     </el-table-column>
@@ -537,7 +543,6 @@
                     return `${year}/${month}/${day}`
                 },
                 clickDate() {
-                    console.log(this.datetimerange)
                     const start = new Date(this.datetimerange)
                     const oldend = new Date(this.datetimerange)
                     const startday = start.getDate()
@@ -572,7 +577,6 @@
                     }
                 },
                 clickDateDay() {
-                    console.log('this.chooseDate2', this.chooseDate2);
                     const startDate = new Date(this.chooseDate2[0]);
                     const endDate = new Date(this.chooseDate2[1]);
                     const startday = startDate.getDate();
@@ -722,6 +726,8 @@
                 },
                 initJson() {
                     this.isLoading = true;
+                    this.allGoods = [];
+                    this.calculateTableData = [];
                     this.allGoodsJsons.forEach(element => {
                         if (element !== '') {
                             const myJson = JSON.parse(element);
@@ -733,7 +739,7 @@
                     const productBuyer = [];
                     const productOther = [];
                     this.selfGoodsJsons.forEach(element => {
-                        const index = productSelf.findIndex(v => v.productId !== element.productId)
+                        const index = productSelf.findIndex(v => v.productId === element.productId)
                         if (index === -1) {
                             productSelf.push(element);
                         } else {
@@ -742,7 +748,7 @@
                         }
                     });
                     this.contentGoodsJsons.forEach(element => {
-                        const index = productContent.findIndex(v => v.productId !== element.productId)
+                        const index = productContent.findIndex(v => v.productId === element.productId)
                         if (index === -1) {
                             productContent.push(element);
                         } else {
@@ -751,7 +757,7 @@
                         }
                     });
                     this.buyerGoodsJsons.forEach(element => {
-                        const index = productBuyer.findIndex(v => v.productId !== element.productId)
+                        const index = productBuyer.findIndex(v => v.productId === element.productId)
                         if (index === -1) {
                             productBuyer.push(element);
                         } else {
@@ -760,7 +766,7 @@
                         }
                     });
                     this.otherGoodsJsons.forEach(element => {
-                        const index = productOther.findIndex(v => v.productId !== element.productId)
+                        const index = productOther.findIndex(v => v.productId === element.productId)
                         if (index === -1) {
                             productOther.push(element);
                         } else {
@@ -774,6 +780,7 @@
                             productName: element.item.title,    //  商品名称
                             payment: element.payAmt.value.toFixed(2),   //  总金额
                             refundAmount: element.sucRefundAmt.value.toFixed(2),    //  退款金额
+                            afterRefundAmount: element.payAmt.value.toFixed(2) - element.sucRefundAmt.value.toFixed(2),
                             refundAmountRate: `${+((Number(element.sucRefundAmt.value.toFixed(2)) / Number(element.payAmt.value.toFixed(2))) * 100).toFixed(2)}%`,  //  退款率
                             allVisitor: element.itmUv.value,
                         }
@@ -784,10 +791,10 @@
                             data.selfVisitor = selfGoodsItem[0].visitor.toFixed(2);
                             data.selfVisitorRate = `${+((Number(data.selfVisitor) / Number(data.allVisitor.toFixed(2))) * 100).toFixed(2)}%`;  //  内容
                         } else {
-                            data.selfAmount = '无数据';
-                            data.selfAmountRate = '无数据';
-                            data.selfVisitor = '无数据';
-                            data.selfVisitorRate = '无数据';
+                            data.selfAmount = 0;
+                            data.selfAmountRate = '0%';
+                            data.selfVisitor = 0;
+                            data.selfVisitorRate = '0%';
                         }
                         const contentGoodsItem = this.contentGoodsJsons.filter(item => item.productId === element.item.itemId)
                         if (contentGoodsItem.length > 0) {
@@ -796,10 +803,10 @@
                             data.contentVisitor = contentGoodsItem[0].visitor.toFixed(2);
                             data.contentVisitorRate = `${+((Number(data.contentVisitor) / Number(data.allVisitor.toFixed(2))) * 100).toFixed(2)}%`;  //  内容
                         } else {
-                            data.contentAmount = '无数据';
-                            data.contentAmountRate = '无数据';
-                            data.contentVisitor = '无数据';
-                            data.contentVisitorRate = '无数据';
+                            data.contentAmount = 0;
+                            data.contentAmountRate = '0%';
+                            data.contentVisitor = 0;
+                            data.contentVisitorRate = '0%';
                         }
                         const buyerGoodsItem = this.buyerGoodsJsons.filter(item => item.productId === element.item.itemId)
                         if (buyerGoodsItem.length > 0) {
@@ -808,8 +815,8 @@
                             // data.buyerVisitor = buyerGoodsItem[0].visitor.toFixed(2);
                             // data.buyerVisitorRate = `${+((Number(data.buyerVisitor) / Number(data.allVisitor.toFixed(2))) * 100).toFixed(2)}%`;  //  内容
                         } else {
-                            data.buyerAmount = '无数据';
-                            data.buyerAmountRate = '无数据';
+                            data.buyerAmount = 0;
+                            data.buyerAmountRate = '0%';
                             // data.buyerVisitor = '无数据';
                             // data.buyerVisitorRate = '无数据';
                         }
@@ -820,14 +827,21 @@
                             // data.otherVisitor = otherGoodsItem[0].visitor.toFixed(2);
                             // data.otherVisitorRate = `${+((Number(data.otherVisitor) / Number(data.allVisitor.toFixed(2))) * 100).toFixed(2)}%`;  //  内容
                         } else {
-                            data.otherAmount = '无数据';
-                            data.otherAmountRate = '无数据';
+                            data.otherAmount = 0;
+                            data.otherAmountRate = '0%';
                             // data.otherVisitor = '无数据';
                             // data.otherVisitorRate = '无数据';
                         }
+                        data.saleAllAmount = Number(data.selfAmount) + Number(data.contentAmount) + Number(data.buyerAmount) + Number(data.otherAmount);
+                        data.saleAllAmountRate = `${+((Number(data.saleAllAmount) / Number(element.payAmt.value.toFixed(2))) * 100).toFixed(2)}%`;  //  内容
                         this.calculateTableData.push(data)
-                    })
+                    });
                     this.isLoading = false;
+                    this.$notify({
+                        title: '数据已生成',
+                        message: '请往下滑动预览',
+                        duration: 2000
+                    });
                 },
                 handleChangeSelf(file, fileList) {
                     this.importfxx(file.raw, 'self');
@@ -898,9 +912,9 @@
                                             _this.buyerGoodsJsons.push(obj)
                                             break;
                                         case 'other':
-                                            obj.productId = item["__EMPTY"].split(',')[0];
+                                            obj.productId = item["__EMPTY_1"].split(',')[0];
                                             obj.visitor = 0;
-                                            obj.amount = Number(item["__EMPTY_5"].replace(/,/g, ''));
+                                            obj.amount = Number(item["__EMPTY_19"].replace(/,/g, ''));
                                             _this.otherGoodsJsons.push(obj)
                                             break;
                                         default:
@@ -935,23 +949,26 @@
                             "商品ID": obj.productId,
                             "商品名称": obj.productName,
                             "支付金额": obj.payment,
-                            "退款金额": obj.refundAmount,
+                            "成功退款金额": obj.refundAmount,
+                            "退款后": obj.afterRefundAmount,
                             "退款率(%)": obj.refundAmountRate,
                             "总访客数": obj.allVisitor,
-                            "商家自制-成交金额": obj.selfAmount,
-                            "商家自制-成交金额占比(%)": obj.selfAmountRate,
+                            "商家自制-成交": obj.selfAmount,
+                            "商家自制-成交占比(%)": obj.selfAmountRate,
                             "商家自制-访客": obj.selfVisitor,
                             "商家自制-访客占比(%)": obj.selfVisitorRate,
-                            "内容营销-成交金额": obj.contentAmount,
-                            "内容营销-成交金额占比(%)": obj.contentAmountRate,
+                            "内容营销-成交": obj.contentAmount,
+                            "内容营销-成交占比(%)": obj.contentAmountRate,
                             "内容营销-访客": obj.contentVisitor,
                             "内容营销-访客占比(%)": obj.contentVisitorRate,
-                            "买家内容-成交金额": obj.buyerAmount,
-                            "买家内容-成交金额占比(%)": obj.buyerAmountRate,
+                            "买家秀-成交": obj.buyerAmount,
+                            "买家秀-成交占比(%)": obj.buyerAmountRate,
                             // "买家内容-访客": obj.buyerVisitor,
                             // "买家内容-访客占比(%)": obj.buyerVisitorRate,
-                            "其他-成交金额": obj.otherAmount,
-                            "其他-成交金额占比(%)": obj.otherAmountRate,
+                            "微详情-成交": obj.otherAmount,
+                            "微详情-成交占比(%)": obj.otherAmountRate,
+                            "合计-成交": obj.saleAllAmount,
+                            "合计-成交占比(%)": obj.saleAllAmountRate,
                             // "其他-访客": obj.otherVisitor,
                             // "其他-访客占比(%)": obj.otherVisitorRate,
                         }
